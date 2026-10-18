@@ -1,0 +1,436 @@
+/* ==========================================================
+   base.css — общий фундамент сайта.
+   Подключается на КАЖДОЙ странице ПЕРЕД её собственным css.
+   Хочешь поменять оттенок, шрифт или скорость анимаций
+   везде сразу — правь блок :root ниже.
+   ========================================================== */
+
+/* Шрифты (нужен интернет). Позже можно скачать и положить в /fonts */
+@import url("https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Russo+One&display=swap");
+
+:root {
+  /* ---------- палитра ---------- */
+  --void: #050505;      /* фон */
+  --ash: #151515;       /* слой чуть светлее фона */
+  --concrete: #3b3b3b;  /* линии, контуры, плейсхолдеры */
+  --smoke: #8a8a85;     /* второстепенный текст */
+  --bone: #e2dac9;      /* основной текст */
+  --rust: #6e4816;      /* редкий акцент (вердикты, ошибки): одно место на экран */
+
+  /* ---------- шрифты ---------- */
+  --font-display: "Russo One", "Arial Black", Impact, sans-serif; /* заголовки, кнопки */
+  --font-type: "Courier Prime", "Courier New", monospace;         /* текст, «печатная машинка» */
+
+  /* ---------- шкала размеров ---------- */
+  --fs-xs: 0.75rem;
+  --fs-s: 0.875rem;
+  --fs-m: 1.0625rem;
+  --fs-l: clamp(1.25rem, 2vw, 1.75rem);
+  --fs-xl: clamp(2rem, 5vw, 4rem);
+  --fs-xxl: clamp(3rem, 11vw, 10rem);
+  --fs-mega: clamp(4rem, 18vw, 18rem);
+
+  /* ---------- отступы ---------- */
+  --gutter: clamp(1rem, 3vw, 2.5rem);
+
+  /* ---------- движение ---------- */
+  --ease-snap: cubic-bezier(0.19, 1, 0.22, 1);  /* резкий старт, мягкая остановка */
+  --ease-hard: cubic-bezier(0.7, 0, 0.2, 1);    /* тяжёлый, «механический» ход */
+  --t-fast: 120ms;
+  --t-mid: 320ms;
+  --t-slow: 700ms;
+
+  /* ---------- слои ---------- */
+  --z-corner: 50;
+  --z-grain: 150;
+  --z-veil: 250;
+}
+
+/* ==========================================================
+   Сброс и основа
+   ========================================================== */
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html {
+  color-scheme: dark;
+  -webkit-text-size-adjust: 100%;
+  scrollbar-width: thin;
+  scrollbar-color: var(--concrete) var(--void);
+}
+
+body {
+  margin: 0;
+  min-height: 100svh;
+  overflow-x: hidden;
+  background: var(--void);
+  color: var(--bone);
+  font-family: var(--font-type);
+  font-size: var(--fs-m);
+  line-height: 1.6;
+  cursor: crosshair;
+  -webkit-font-smoothing: antialiased;
+  
+}
+
+h1, h2, h3, h4 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  line-height: 0.92;
+  letter-spacing: -0.01em;
+}
+
+p { margin: 0; max-width: 62ch; }
+a { color: inherit; text-decoration: none; }
+a, button { cursor: inherit; }
+img { display: block; max-width: 100%; }
+
+::selection { background: var(--bone); color: var(--void); }
+
+:focus-visible { outline: 2px solid var(--bone); outline-offset: 4px; }
+
+/* Зерно поверх всего: еле заметное, живое. Только transform, поэтому не тормозит */
+body::after {
+  content: "";
+  position: fixed;
+  inset: -50%;
+  z-index: var(--z-grain);
+  pointer-events: none;
+  opacity: 0.07;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  animation: grain 0.7s steps(7) infinite;
+}
+
+@keyframes grain {
+  0%   { transform: translate(0, 0); }
+  14%  { transform: translate(-4%, 3%); }
+  28%  { transform: translate(3%, -5%); }
+  42%  { transform: translate(-6%, -2%); }
+  57%  { transform: translate(5%, 4%); }
+  71%  { transform: translate(-2%, 6%); }
+  85%  { transform: translate(4%, -3%); }
+  100% { transform: translate(0, 0); }
+}
+
+/* ==========================================================
+   «Служебные» подписи в углах экрана (структура, как в досье)
+   <div class="corner corner--tl">ДОПУСК: ОТКАЗАНО</div>
+   ========================================================== */
+.corner {
+  position: fixed;
+  z-index: var(--z-corner);
+  margin: var(--gutter);
+  font-size: var(--fs-xs);
+  letter-spacing: 0.04em;
+  color: var(--smoke);
+  pointer-events: none;
+}
+.corner--tl { top: 0; left: 0; }
+.corner--tr { top: 0; right: 0; text-align: right; }
+.corner--bl { bottom: 0; left: 0; }
+.corner--br { bottom: 0; right: 0; text-align: right; }
+
+/* ==========================================================
+   ТЕКСТОВЫЕ ЭФФЕКТЫ
+   Классы .is-in добавляет JS (common.js), когда текст пора показать.
+   ========================================================== */
+
+/* 1) Строки выезжают из-под маски.
+   JS оборачивает каждую строку: <span class="line"><span class="line__in">…</span></span>
+   и задаёт каждой --i (номер строки) для задержки. */
+.line {
+  display: block;
+  overflow: hidden;
+  padding-block: 0.06em;   /* чтобы не обрезались хвосты букв */
+  margin-block: -0.06em;
+}
+.line__in {
+  display: block;
+  transform: translateY(105%) skewY(6deg);
+  transform-origin: left bottom;
+}
+.is-in .line__in,
+.line.is-in .line__in {
+  transform: none;
+  transition: transform var(--t-slow) var(--ease-snap);
+  transition-delay: calc(var(--i, 0) * 70ms);
+}
+
+/* 2) Цензурная плашка: текст закрыт, плашка уезжает вправо.
+   <span class="redact" style="--d:200ms">секретный текст</span> */
+.redact { position: relative; display: inline-block; }
+.redact::after {
+  content: "";
+  position: absolute;
+  inset: 0 -0.15em;
+  background: var(--bone);
+  transform-origin: right center;
+  transition: transform var(--t-mid) var(--ease-hard);
+  transition-delay: var(--d, 0ms);
+}
+.redact.is-in::after { transform: scaleX(0); }
+
+/* 3) Фонарик: текст тёмный и проступает вокруг курсора.
+   JS обновляет --mx и --my. --r — радиус светлого пятна. */
+.spot {
+  --mx: 50%;
+  --my: 50%;
+  --r: 170px;
+  -webkit-mask-image: radial-gradient(circle var(--r) at var(--mx) var(--my), #000 0%, rgba(0, 0, 0, 0.07) 100%);
+  mask-image: radial-gradient(circle var(--r) at var(--mx) var(--my), #000 0%, rgba(0, 0, 0, 0.07) 100%);
+}
+
+/* 4) Вертикальный текст и контурные «призрачные» цифры/слова */
+.vert { writing-mode: vertical-rl; transform: rotate(180deg); }
+.ghost {
+  font-family: var(--font-display);
+  line-height: 0.8;
+  color: transparent;
+  -webkit-text-stroke: 1px var(--concrete);
+  user-select: none;
+  pointer-events: none;
+}
+
+/* 5) Глитч в оттенках серого. Нужен атрибут data-text с тем же текстом:
+   <span class="glitch" data-text="Могнуть">Могнуть</span>
+   Включается по наведению или классом .is-glitch */
+.glitch { position: relative; display: inline-block; }
+.glitch::before,
+.glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+.glitch::before { color: #c9c9c4; }
+.glitch::after  { color: #5a5a5a; }
+.glitch:hover::before,
+.glitch.is-glitch::before { opacity: 1; animation: glitch-a 380ms steps(1, end) infinite; }
+.glitch:hover::after,
+.glitch.is-glitch::after  { opacity: 1; animation: glitch-b 380ms steps(1, end) infinite; }
+
+@keyframes glitch-a {
+  0%   { clip-path: inset(10% 0 70% 0); transform: translate(-6px, 0); }
+  20%  { clip-path: inset(60% 0 12% 0); transform: translate(5px, 0); }
+  40%  { clip-path: inset(30% 0 45% 0); transform: translate(-3px, 1px); }
+  60%  { clip-path: inset(80% 0 4% 0);  transform: translate(7px, 0); }
+  80%  { clip-path: inset(2% 0 85% 0);  transform: translate(-5px, -1px); }
+  100% { clip-path: inset(45% 0 35% 0); transform: translate(4px, 0); }
+}
+@keyframes glitch-b {
+  0%   { clip-path: inset(70% 0 10% 0); transform: translate(6px, 0); }
+  20%  { clip-path: inset(15% 0 60% 0); transform: translate(-5px, 1px); }
+  40%  { clip-path: inset(50% 0 30% 0); transform: translate(4px, 0); }
+  60%  { clip-path: inset(5% 0 82% 0);  transform: translate(-7px, 0); }
+  80%  { clip-path: inset(85% 0 2% 0);  transform: translate(5px, -1px); }
+  100% { clip-path: inset(25% 0 55% 0); transform: translate(-4px, 0); }
+}
+
+/* 6) Рваное мигание при появлении. Повесь .flick на любой элемент */
+.flick { animation: flick 640ms steps(1, end) both; }
+@keyframes flick {
+  0%   { opacity: 0; }
+  10%  { opacity: 1; }
+  18%  { opacity: 0.1; }
+  26%  { opacity: 1; }
+  34%  { opacity: 0; }
+  42%  { opacity: 1; }
+  52%  { opacity: 0.25; }
+  60%, 100% { opacity: 1; }
+}
+
+/* 7) Постоянная мелкая дрожь (для страницы «стать тру адамом») */
+.jitter { animation: jitter 180ms steps(2) infinite; }
+@keyframes jitter {
+  0%   { transform: translate(0, 0); }
+  25%  { transform: translate(-1px, 1px); }
+  50%  { transform: translate(1px, -1px); }
+  75%  { transform: translate(-1px, -1px); }
+  100% { transform: translate(0, 0); }
+}
+
+/* ==========================================================
+   КНОПКИ-ТЕКСТ (без коробок): по наведению слово зачёркивается
+   <button class="btn">Психологическая поддержка</button>
+   ========================================================== */
+.btn {
+  appearance: none;
+  position: relative;
+  padding: 0.2em 0;
+  background: none;
+  border: 0;
+  color: var(--bone);
+  font-family: var(--font-display);
+  font-size: var(--fs-l);
+  text-align: left;
+  transition: color var(--t-fast) steps(1);
+}
+.btn::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 52%;
+  height: 0.09em;
+  background: var(--bone);
+  transform: scaleX(0);
+  transform-origin: right center;
+  transition: transform var(--t-mid) var(--ease-hard);
+}
+.btn:hover,
+.btn:focus-visible { color: var(--smoke); }
+.btn:hover::after,
+.btn:focus-visible::after { transform: scaleX(1); transform-origin: left center; }
+.btn:active { transform: translate(2px, 2px); }
+
+/* ==========================================================
+   ПОЛЯ ФОРМ: только линия снизу
+   <label class="field">
+     <span class="field__label">Имя</span>
+     <input class="field__input" type="text" placeholder="…">
+   </label>
+   ========================================================== */
+.field { display: block; }
+.field__label {
+  display: block;
+  margin-bottom: 0.3rem;
+  font-size: var(--fs-xs);
+  letter-spacing: 0.04em;
+  color: var(--smoke);
+}
+.field__input {
+  width: 100%;
+  padding: 0.55rem 0;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--concrete);
+  border-radius: 0;
+  outline: none;
+  color: var(--bone);
+  font: inherit;
+  font-size: var(--fs-l);
+  caret-color: var(--bone);
+  transition: border-color var(--t-fast) steps(1);
+}
+.field__input::placeholder { color: var(--concrete); }
+.field__input:focus { border-bottom-color: var(--bone); box-shadow: 0 1px 0 var(--bone); }
+.field__input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 100px #000 inset;
+  -webkit-text-fill-color: var(--bone);
+}
+
+/* ==========================================================
+   ПЕРЕХОД МЕЖДУ СТРАНИЦАМИ («veil»)
+   Разметку вставляет common.js:
+   .veil > .veil__slices > .veil__slice × N
+        > .veil__stage > .veil__word + .veil__type > .veil__caret
+   Состояния (классы на .veil):
+     .is-on     — завеса включена (мгновенный чёрный экран)
+     .is-strobe — строб: рывки чёрный ↔ тёмно-серый
+     .is-out    — выход: текст ломается, полосы разъезжаются
+   ========================================================== */
+.veil {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-veil);
+  display: none;
+  place-items: center;
+}
+.veil.is-on { display: grid; }
+.veil.is-out { pointer-events: none; }
+
+.veil__slices { position: absolute; inset: 0; overflow: hidden; }
+.veil__slice {
+  --dir: 1;
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: calc(100% / var(--n, 12) + 1px);
+  top: calc(100% / var(--n, 12) * var(--i, 0));
+  background: #000;
+}
+.veil__slice:nth-child(even) { --dir: -1; }
+
+.veil__stage {
+  position: relative;
+  display: grid;
+  gap: 1.25rem;
+  justify-items: start;
+  width: min(92vw, 60rem);
+  padding-inline: var(--gutter);
+}
+.veil__word {
+  font-family: var(--font-display);
+  font-size: var(--fs-xxl);
+  line-height: 0.9;
+  color: var(--bone);
+  opacity: 0;
+}
+.veil__type {
+  min-height: 3.4em;
+  max-width: 34ch;
+  margin: 0;
+  font-size: var(--fs-l);
+  color: var(--bone);
+}
+.veil__caret {
+  display: inline-block;
+  width: 0.55ch;
+  height: 1.05em;
+  margin-left: 2px;
+  vertical-align: -0.15em;
+  background: var(--bone);
+  animation: caret 1s steps(1) infinite;
+}
+@keyframes caret { 50% { opacity: 0; } }
+
+.veil.is-strobe .veil__slice { animation: strobe 420ms steps(1, end) both; }
+@keyframes strobe {
+  0%   { background: #000; }
+  12%  { background: #232323; }
+  24%  { background: #000; }
+  36%  { background: #2e2e2e; }
+  48%  { background: #000; }
+  60%  { background: #1a1a1a; }
+  72%, 100% { background: #000; }
+}
+
+.veil.is-out .veil__stage { animation: stage-break 160ms steps(2) both; }
+@keyframes stage-break {
+  0%   { transform: translateX(0); opacity: 1; }
+  50%  { transform: translateX(18px) skewX(-8deg); opacity: 1; }
+  100% { transform: translateX(-30px); opacity: 0; }
+}
+
+/* --d (мс) JS задаёт каждой полосе случайно: полосы уезжают не одновременно */
+.veil.is-out .veil__slice {
+  animation: slice-out 560ms var(--ease-hard) both;
+  animation-delay: calc(var(--d, 0) * 1ms + 120ms);
+}
+@keyframes slice-out { to { transform: translateX(calc(101% * var(--dir))); } }
+
+/* Пока страница открывается, закрываем её чёрным, чтобы не мелькнул контент.
+   common.js ставит html.vt-arrive сразу и снимает, когда завеса готова. */
+html.vt-arrive::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--z-veil) + 1);
+  background: #000;
+}
+html.vt-lock { overflow: hidden; }
+
+/* ==========================================================
+   Спокойный режим: common.js ставит html.calm, если открыть сайт
+   с ?calm или если в системе включено «уменьшить движение».
+   Выключает всё мигающее и дрожащее. Дизайн остаётся.
+   ========================================================== */
+html.calm body::after,
+html.calm .glitch::before,
+html.calm .glitch::after,
+html.calm .jitter,
+html.calm .veil.is-strobe .veil__slice { animation: none; }
+html.calm .flick { animation: none; opacity: 1; }

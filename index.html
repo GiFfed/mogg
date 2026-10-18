@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<!-- data-intro: при заходе проигрывается вступительная сцена. Убери атрибут, если мешает при разработке -->
+<html lang="ru" data-intro>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Регистрация</title>
+
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/index.css">
+
+  <script src="js/common.js"></script>
+</head>
+<body class="page-index">
+
+  <!-- служебные подписи по углам -->
+  <div class="corner corner--tl" id="formNo"></div>
+  <div class="corner corner--tr" id="counter"></div>
+  <div class="corner corner--bl" id="clock"></div>
+  <div class="corner corner--br" id="status"></div>
+
+  <!-- большая контурная цифра текущего вопроса -->
+  <div class="ghost reg__ghost" id="ghost" aria-hidden="true"></div>
+
+  <!-- портрет уровня при наведении (картинки: img/levels/*.png) -->
+  <div class="portrait" id="portrait" aria-hidden="true">
+    <div class="portrait__fig" id="fig">
+      <div class="portrait__rays"></div>
+      <div class="portrait__halo"></div>
+      <img class="portrait__img" alt="">
+      <img class="portrait__img portrait__img--a" alt="">
+      <img class="portrait__img portrait__img--b" alt="">
+    </div>
+  </div>
+  <div class="flare" id="flare" aria-hidden="true"></div>
+
+  <main class="reg">
+
+    <!-- ЭТАП 1: анкета, вопросы по одному -->
+    <section class="ask" id="ask">
+      <h1 class="ask__q" id="q"></h1>
+
+      <div class="ask__rest" id="rest">
+        <div id="body"></div>
+        <p class="ask__hint" id="hint"></p>
+        <p class="ask__press" id="press"></p>
+        <p class="ask__err" id="err" role="alert"></p>
+        <button class="btn ask__next" id="next" type="button">Далее</button>
+      </div>
+      <div style="margin-top: 2rem;">
+  <button class="btn" id="btnSkipReg" type="button" style="color: var(--smoke); font-size: var(--fs-s);">[ Пропустить унижение и войти с готовым фреймом ]</button>
+</div>
+    </section>
+
+    <!-- ЭТАП 2: «обработка» и вердикт -->
+    <section class="scan" id="scan" hidden>
+      <!-- шкала-плёнка: заливка проявляет портреты, маркер показывает текущий уровень -->
+      <div class="meter" id="meter">
+        <p class="meter__read jitter" id="read"></p>
+        <div class="meter__body">
+          <div class="meter__strip" id="stripDim"></div>
+          <div class="meter__strip meter__lit" id="stripLit"></div>
+          <div class="meter__marker"></div>
+        </div>
+        <div class="meter__ticks" id="ticks"></div>
+      </div>
+
+      <div class="scan__work" id="work">
+        <p class="scan__msg" id="msg"></p>
+      </div>
+
+      <div class="verdict" id="verdict" hidden>
+        <p class="verdict__pre" id="vPre"></p>
+        <h2 class="verdict__lvl glitch" id="vLvl"></h2>
+        <p class="verdict__note" id="vNote"></p>
+        <p class="verdict__niche" id="vNiche"></p>
+        <a class="btn verdict__go" href="choose.html"
+           data-vt-word="ДОПУСК"
+           data-vt-phrase="Допуск выдан частично. Приятного унижения.">Продолжить</a>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="js/index.js"></script>
+</body>
+</html>

@@ -1,0 +1,596 @@
+/* ==========================================================
+   index.css — страница регистрации.
+   Общие переменные и эффекты берутся из base.css.
+   ========================================================== */
+
+/* hidden должен побеждать display:grid ниже */
+[hidden] { display: none !important; }
+
+/* ---------- ФОНОВАЯ КАРТИНКА ----------
+   Когда пришлёшь картинку, положи её в img/ и замени none, например:
+   --bg-image: url("../img/bg-register.jpg");
+   Она автоматически станет чёрно-белой и тёмной. */
+.page-index { --bg-image: none; }
+
+.page-index::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: var(--bg-image) center / cover no-repeat;
+  filter: grayscale(1) contrast(1.15) brightness(0.32);
+}
+
+/* всё содержимое выше контурной цифры */
+.reg { position: relative; z-index: 1; }
+
+/* ---------- контурная цифра вопроса ---------- */
+.reg__ghost {
+  position: fixed;
+  right: var(--gutter);
+  bottom: 1rem;
+  z-index: 0;
+  font-size: var(--fs-mega);
+}
+
+/* ==========================================================
+   ЭТАП 1: вопросы
+   Композиция: вопрос прижат к низу, под ним ответ.
+   Верх экрана остаётся пустым и чёрным.
+   ========================================================== */
+.ask {
+  min-height: 100svh;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  padding: 6rem var(--gutter) calc(var(--gutter) * 2);
+}
+
+.ask__q {
+  align-self: end;
+  max-width: 14em;
+  margin-bottom: clamp(1.5rem, 4vh, 3rem);
+  font-size: var(--fs-xl);
+}
+
+.ask__rest { width: min(100%, 44rem); }
+
+.ask__hint {
+  margin-top: 0.9rem;
+  font-size: var(--fs-s);
+  color: var(--smoke);
+}
+
+.ask__press {
+  min-height: 1.6em;
+  font-size: var(--fs-s);
+}
+.ask__press:not(:empty)::before { content: "! "; }
+
+.ask__err {
+  min-height: 1.6em;
+  margin-top: 0.6rem;
+  font-size: var(--fs-s);
+}
+.ask__err:not(:empty)::before { content: "✕ "; }
+
+.ask__next { margin-top: 1.2rem; }
+
+/* ---------- выбор уровня: слова, не кнопки в рамках ---------- */
+.choices {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+  gap: 0.2rem 2rem;
+}
+.choice { padding-left: 0.35rem; }
+.choice::before {
+  content: "";
+  position: absolute;
+  left: -0.9rem;
+  top: 0.2em;
+  bottom: 0.2em;
+  width: 0.35rem;
+  background: var(--bone);
+  transform: scaleY(0);
+  transform-origin: bottom;
+  transition: transform var(--t-fast) var(--ease-hard);
+}
+.choice.is-picked::before { transform: scaleY(1); }
+
+/* ==========================================================
+   ЭТАП 2: обработка и вердикт
+   ========================================================== */
+.scan {
+  min-height: 100svh;
+  display: grid;
+  align-content: end;
+  padding: 6rem var(--gutter) calc(var(--gutter) * 2);
+}
+
+.scan__msg {
+  min-height: 2.8em;
+  margin-top: 1.4rem;
+  font-size: var(--fs-l);
+  max-width: 30ch;
+}
+
+.verdict__pre { font-size: var(--fs-l); color: var(--smoke); }
+.verdict__lvl {
+  margin: 0.3rem 0 1rem;
+  font-size: var(--fs-xxl);
+  line-height: 0.85;
+}
+.verdict__note { max-width: 40ch; font-size: var(--fs-l); }
+.verdict__niche { max-width: 46ch; margin-top: 1rem; font-size: var(--fs-m); color: var(--smoke); }
+.verdict__go { display: inline-block; margin-top: 2rem; }
+
+/* ---------- телефон ---------- */
+@media (max-width: 600px) {
+  .ask__q { font-size: clamp(1.8rem, 9vw, 2.6rem); }
+  .reg__ghost { opacity: 0.6; }
+}
+
+/* ==========================================================
+   ПОРТРЕТ УРОВНЯ ПРИ НАВЕДЕНИИ
+   Рисунки чёрные на белом: инвертируем в белые линии на чёрном,
+   а блендинг screen делает чёрную подложку прозрачной.
+   Эффект растёт со ступенью (классы .tier-0 … .tier-6 вешает JS):
+   0-1 просто появился · 2-3 рваное мигание · 4 засвет
+   5 chad: вспышка, ореол, глитч · 6 true adam: сошёл свет, лучи, дрожь
+   ========================================================== */
+.portrait {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  right: calc(var(--gutter) * 1.5);
+  width: min(34vw, 26rem);
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  visibility: hidden;
+  opacity: 0;
+}
+.portrait.is-on { visibility: visible; opacity: 1; }
+
+.portrait__fig {
+  position: relative;
+  width: 100%;
+  height: min(70vh, 30rem);
+}
+
+.portrait__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: invert(1) contrast(1.25);
+  mix-blend-mode: screen;
+}
+.portrait__img--a,
+.portrait__img--b { opacity: 0; }
+
+.portrait__halo {
+  position: absolute;
+  inset: -25%;
+  background: radial-gradient(closest-side, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.12) 55%, transparent 75%);
+  filter: blur(8px);
+  opacity: 0;
+}
+.portrait__rays {
+  position: absolute;
+  inset: -60%;
+  background: repeating-conic-gradient(rgba(255, 255, 255, 0.22) 0deg 3deg, transparent 3deg 14deg);
+  -webkit-mask-image: radial-gradient(closest-side, #000 15%, transparent 72%);
+  mask-image: radial-gradient(closest-side, #000 15%, transparent 72%);
+  opacity: 0;
+}
+
+/* ---------- ступени ---------- */
+.tier-0, .tier-1 { opacity: 0.8; }                                           /* без вау, как и просили */
+.tier-2 { animation: flick 420ms steps(1, end) both; }
+.tier-3 { animation: flick 520ms steps(1, end) both; }
+.tier-4 { animation: p-bloom 700ms ease-out both; }
+.tier-4 .portrait__halo { opacity: 0.25; }
+
+.tier-5 { animation: p-bloom 800ms ease-out both; }
+.tier-5 .portrait__halo { opacity: 0.55; }
+.tier-5 .portrait__rays { opacity: 0.2; animation: rays-spin 30s linear infinite; }
+.tier-5 .portrait__img--a { opacity: 0.8; animation: glitch-a 380ms steps(1, end) infinite; }
+.tier-5 .portrait__img--b { opacity: 0.6; animation: glitch-b 380ms steps(1, end) infinite; }
+
+.tier-6 { animation: p-descend 1100ms var(--ease-snap) both, p-float 3.2s ease-in-out 1.1s infinite; }
+.tier-6 .portrait__halo { opacity: 0.85; animation: halo-pulse 2.4s ease-in-out infinite; }
+.tier-6 .portrait__rays { opacity: 0.7; animation: rays-spin 24s linear infinite; }
+.tier-6 .portrait__img--a { opacity: 1; animation: glitch-a 300ms steps(1, end) infinite; }
+.tier-6 .portrait__img--b { opacity: 0.8; animation: glitch-b 300ms steps(1, end) infinite; }
+
+@keyframes p-bloom {
+  0%   { opacity: 0; filter: brightness(4) blur(10px); transform: scale(1.06); }
+  40%  { opacity: 1; }
+  100% { opacity: 1; filter: none; transform: none; }
+}
+@keyframes p-descend {
+  0%   { opacity: 0; filter: brightness(6) blur(14px); transform: translateY(-14%) scale(1.12); }
+  35%  { opacity: 1; }
+  100% { opacity: 1; filter: none; transform: none; }
+}
+@keyframes p-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-1.5%); }
+}
+@keyframes halo-pulse {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50%      { opacity: 1; transform: scale(1.08); }
+}
+@keyframes rays-spin { to { transform: rotate(360deg); } }
+
+/* ---------- вспышка экрана (chad = 1 вспышка, true adam = серия) ---------- */
+.flare {
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--z-corner) + 1);
+  background: #fff;
+  opacity: 0;
+  pointer-events: none;
+}
+.flare.is-5 { animation: flare-1 260ms steps(1, end); }
+.flare.is-6 { animation: flare-2 700ms steps(1, end); }
+@keyframes flare-1 {
+  0%   { opacity: 0; }
+  10%  { opacity: 0.85; }
+  25%  { opacity: 0; }
+  40%  { opacity: 0.45; }
+  60%, 100% { opacity: 0; }
+}
+@keyframes flare-2 {
+  0%   { opacity: 0; }
+  6%   { opacity: 1; }
+  14%  { opacity: 0; }
+  22%  { opacity: 1; }
+  30%  { opacity: 0; }
+  45%  { opacity: 0.7; }
+  55%  { opacity: 0; }
+  70%  { opacity: 0.4; }
+  100% { opacity: 0; }
+}
+
+/* дрожь страницы при появлении true adam */
+.reg.quake { animation: quake 420ms steps(1, end); }
+@keyframes quake {
+  0%   { transform: translate(0, 0); }
+  12%  { transform: translate(-5px, 3px); }
+  24%  { transform: translate(4px, -4px); }
+  36%  { transform: translate(-3px, -2px); }
+  48%  { transform: translate(5px, 2px); }
+  60%  { transform: translate(-2px, 3px); }
+  76%  { transform: translate(2px, -1px); }
+  100% { transform: translate(0, 0); }
+}
+
+/* телефон: портрет за текстом, по центру */
+@media (max-width: 800px) {
+  .portrait { left: 0; right: 0; width: auto; z-index: 0; }
+  .portrait.is-on { opacity: 0.5; }
+  .portrait__fig { height: 55vh; }
+}
+
+/* спокойный режим: без вспышек, лучей, глитча и дрожи */
+html.calm .flare { display: none; }
+html.calm .reg.quake,
+html.calm .portrait__rays,
+html.calm .portrait__halo,
+html.calm .portrait__img--a,
+html.calm .portrait__img--b,
+html.calm .tier-5,
+html.calm .tier-6 { animation: none; }
+
+/* ==========================================================
+   ШКАЛА-ПЛЁНКА (загрузка вместо цифр)
+   Ряд портретов приглушён, заливка по --p (0..1) проявляет их,
+   маркер показывает текущий уровень. JS задаёт --p и --n.
+   ========================================================== */
+.meter { --p: 0; --n: 7; position: relative; padding-top: 2.4rem; margin-bottom: 1.6rem; }
+
+.meter__read {
+  position: absolute;
+  top: 0;
+  left: clamp(3.5rem, calc(var(--p) * 100%), calc(100% - 3.5rem));
+  width: 7rem;
+  margin: 0 0 0 -3.5rem;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: var(--fs-l);
+}
+
+.meter__body { position: relative; }
+.meter__strip {
+  display: grid;
+  grid-template-columns: repeat(var(--n), 1fr);
+  height: clamp(7rem, 24vh, 14rem);
+}
+.meter__lit {
+  position: absolute;
+  inset: 0;
+  clip-path: inset(0 calc((1 - var(--p)) * 100%) 0 0);
+  mix-blend-mode: screen;
+}
+.meter__cell { position: relative; min-width: 0; }
+.meter__cell img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: invert(1) contrast(1.25);
+}
+.meter__strip:not(.meter__lit) .meter__cell img { opacity: 0.2; mix-blend-mode: screen; }
+
+.meter__marker {
+  position: absolute;
+  top: -0.8rem;
+  bottom: 0;
+  left: calc(var(--p) * 100%);
+  width: 2px;
+  margin-left: -1px;
+  background: var(--bone);
+}
+
+.meter__ticks {
+  display: grid;
+  grid-template-columns: repeat(var(--n), 1fr);
+  margin-top: 0.5rem;
+  font-size: var(--fs-xs);
+  color: var(--smoke);
+}
+.meter__ticks span {
+  padding-left: 0.4rem;
+  border-left: 1px solid var(--concrete);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* падение назад: тряска всей шкалы */
+.meter.is-drop { animation: quake 420ms steps(1, end); }
+
+/* финал: остаётся гореть только портрет вердикта */
+.meter.is-final .meter__lit { clip-path: none; }
+.meter.is-final .meter__lit .meter__cell:not(.is-hit) { opacity: 0; }
+.meter.is-final .meter__marker,
+.meter.is-final .meter__read { display: none; }
+.meter__cell.is-hit img { animation: meter-hit 700ms ease-out both; }
+@keyframes meter-hit {
+  0%   { filter: invert(1) contrast(1.25) brightness(4) blur(8px); transform: scale(1.08); }
+  100% { filter: invert(1) contrast(1.25); transform: none; }
+}
+
+html.calm .meter.is-drop,
+html.calm .meter__cell.is-hit img { animation: none; }
+
+/* ==========================================================
+   ПЕРЕХОДЫ МЕЖДУ ВОПРОСАМИ (кинематографичные)
+   Слой .fx создаёт JS (блок FX в index.js). Общий набор:
+   .fx__cam камера (JS трясёт и наезжает) · .fx__vig пульс по краям
+   .fx__bar чёрные полосы «кино», сжимаются сильнее с каждым шагом
+   ========================================================== */
+.fx {
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--z-corner) + 1);
+  overflow: hidden;
+  background: var(--fx-bg, #000);
+  cursor: crosshair;
+}
+.fx.is-invert { filter: invert(1); }
+.flare { z-index: calc(var(--z-corner) + 3); }   /* вспышка поверх переходов */
+
+.fx__cam { position: absolute; inset: 0; display: grid; place-items: center; }
+.fx__cam.is-wall { display: flex; flex-direction: column; justify-content: center; }
+
+.fx__vig {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.75;
+  background: radial-gradient(closest-side, transparent 45%, rgba(0, 0, 0, 0.9) 100%);
+}
+.fx__vig.is-beat { animation: fx-beat 360ms ease-out; }
+@keyframes fx-beat {
+  0%   { transform: scale(1.3); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.75; }
+}
+
+.fx__bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  background: #000;
+  animation: fx-bar 700ms cubic-bezier(0.19, 1, 0.22, 1) both;
+}
+.fx__bar--t { top: 0; }
+.fx__bar--b { bottom: 0; }
+@keyframes fx-bar { to { height: var(--bar, 10vh); } }
+.fx.is-open .fx__bar { animation: fx-bar-out 500ms cubic-bezier(0.19, 1, 0.22, 1) both; }
+@keyframes fx-bar-out { from { height: var(--bar, 10vh); } to { height: 0; } }
+
+.fx__word {
+  font-family: var(--font-display);
+  font-size: clamp(6rem, 30vw, 26rem);
+  line-height: 0.85;
+  color: var(--bone);
+}
+.fx__word--l { font-size: var(--fs-xxl); }
+.fx__small { font-family: var(--font-display); font-size: var(--fs-xl); line-height: 1; margin-bottom: 0.15em; }
+@keyframes fx-stamp {
+  from { opacity: 0; transform: scale(5); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* 1. ТЫ: несётся из глубины со шлейфом */
+.fx__word--huge {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  font-size: clamp(8rem, 44vw, 40rem);
+}
+.fx-rush {
+  animation: fx-rush 1000ms cubic-bezier(0.9, 0, 1, 0.5) both;
+  animation-delay: calc(var(--k) * 45ms);
+}
+.fx-rush:nth-child(n+2) { opacity: 0.3; filter: blur(6px); }
+@keyframes fx-rush { from { transform: scale(0.03); } to { transform: scale(1); } }
+.fx__cam.is-hit .fx__word { text-shadow: -8px 0 rgba(255, 255, 255, 0.4), 8px 0 rgba(90, 90, 90, 0.9); }
+
+/* 2. НИКОГДА: стена слов */
+.fx__wallrow {
+  white-space: nowrap;
+  font-family: var(--font-display);
+  font-size: min(11vw, 11.5vh);
+  line-height: 0.95;
+  color: var(--concrete);
+  margin-left: calc(var(--dir) * -18vw);
+  transform: translateX(calc(var(--dir) * 130vw));
+}
+.fx__wallrow.is-in { transform: none; transition: transform 140ms steps(3, end); }
+.fx__wallrow.is-hero { color: var(--bone); }
+.fx__cam.has-hero .fx__wallrow:not(.is-hero) { opacity: 0.22; }
+.fx__wallrow.is-out { transform: translateX(calc(var(--dir) * -140vw)); transition: transform 450ms cubic-bezier(0.6, 0, 1, 0.5); }
+
+/* 3. НЕ ДОСТИГНЕШЬ: пол несётся к слову на горизонте */
+.fx__floor {
+  position: absolute;
+  left: -50%;
+  right: -50%;
+  top: 38%;
+  bottom: -10%;
+  transform: perspective(380px) rotateX(62deg);
+  transform-origin: 50% 0;
+  background-image:
+    repeating-linear-gradient(to bottom, rgba(255, 255, 255, 0.35) 0 2px, transparent 2px 80px),
+    repeating-linear-gradient(to right, rgba(255, 255, 255, 0.25) 0 2px, transparent 2px 120px);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 35%);
+  mask-image: linear-gradient(to bottom, transparent, #000 35%);
+}
+.fx__horizon {
+  position: absolute;
+  left: 50%;
+  top: 30%;
+  translate: -50% -50%;
+  font-family: var(--font-display);
+  font-size: min(9vw, 12vh);
+  color: var(--bone);
+  white-space: nowrap;
+}
+.fx__horizon.is-gone { animation: fx-away 700ms ease-in both; }
+@keyframes fx-away { to { transform: scale(0); opacity: 0; } }
+.fx__ne {
+  position: absolute;
+  left: 6vw;
+  top: 8vh;
+  font-size: clamp(8rem, 34vw, 30rem);
+  animation: fx-stamp 220ms steps(3, end) both;
+}
+
+/* 4. МОЕГО УРОВНЯ: линейки, высота, экран светлеет */
+.fx.is-climb { animation: fx-lighten 2800ms linear both; }
+@keyframes fx-lighten { from { background: var(--fx-bg); } to { background: #4a4a4a; } }
+.fx__ruler {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 3.2rem;
+  background-image:
+    linear-gradient(to bottom, var(--smoke) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--bone) 2px, transparent 2px);
+  background-size: 45% 24px, 100% 120px;
+  animation: fx-ruler 260ms linear infinite;
+}
+.fx__ruler--l { left: 6vw; }
+.fx__ruler--r { right: 6vw; transform: scaleX(-1); }
+@keyframes fx-ruler { to { background-position: 0 120px, 0 120px; } }
+.fx__climb { display: grid; justify-items: center; }
+.fx__climb .fx__small { animation: fx-stamp 220ms steps(3, end) both; }
+.fx__climb .fx__word  { animation: fx-stamp 220ms steps(3, end) 600ms both; }
+.fx__alt {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--bar, 14vh) + 1.5rem);
+  text-align: center;
+  font-size: var(--fs-l);
+  letter-spacing: 0.1em;
+}
+
+/* 5. Финал: линия света, дверь, божество, ослепление */
+.fx__fig { position: relative; height: min(92vh, 60rem); aspect-ratio: 640 / 827; max-width: 96vw; }
+.fx__photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  clip-path: inset(0 49.6% 0 49.6%);
+  filter: brightness(9) contrast(1.4);
+}
+.fx__fig.is-line .fx__photo:not(.fx__photo--a):not(.fx__photo--b) { opacity: 1; animation: fx-line 450ms ease-out both; }
+@keyframes fx-line {
+  from { clip-path: inset(50% 49.6% 50% 49.6%); }
+  to   { clip-path: inset(0 49.6% 0 49.6%); }
+}
+.fx__fig.is-open .fx__photo:not(.fx__photo--a):not(.fx__photo--b) { animation: fx-door 520ms cubic-bezier(0.2, 0.9, 0.2, 1) both; }
+@keyframes fx-door {
+  0%   { opacity: 1; clip-path: inset(0 49.6% 0 49.6%); filter: brightness(9) contrast(1.4); }
+  60%  { opacity: 1; clip-path: inset(0 0 0 0); }
+  100% { opacity: 1; clip-path: inset(0 0 0 0); filter: brightness(1.05) saturate(0.75); }
+}
+.fx__halo {
+  position: absolute;
+  inset: -30%;
+  background: radial-gradient(closest-side, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.15) 55%, transparent 75%);
+  filter: blur(10px);
+  opacity: 0;
+}
+.fx__rays {
+  position: absolute;
+  inset: -70%;
+  background: repeating-conic-gradient(rgba(255, 255, 255, 0.22) 0deg 3deg, transparent 3deg 14deg);
+  -webkit-mask-image: radial-gradient(closest-side, #000 15%, transparent 72%);
+  mask-image: radial-gradient(closest-side, #000 15%, transparent 72%);
+  opacity: 0;
+}
+.fx__fig.is-glory { animation: p-float 3s ease-in-out infinite; }
+.fx__fig.is-glory .fx__halo { opacity: 1; animation: halo-pulse 2.4s ease-in-out infinite; }
+.fx__fig.is-glory .fx__rays { opacity: 0.8; animation: rays-spin 10s linear infinite; }
+.fx__fig.is-glory .fx__photo--a { opacity: 0.8; filter: grayscale(1) brightness(1.4); animation: glitch-a 300ms steps(1, end) infinite; }
+.fx__fig.is-glory .fx__photo--b { opacity: 0.6; filter: grayscale(1) brightness(0.7); animation: glitch-b 300ms steps(1, end) infinite; }
+.fx__cap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 5vh;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: var(--fs-l);
+  letter-spacing: 0.25em;
+  color: #fff;
+  mix-blend-mode: difference;
+}
+.fx__blind { position: absolute; inset: 0; background: #fff; opacity: 0; }
+.fx.is-blind .fx__blind { animation: fx-blind 1100ms cubic-bezier(0.6, 0, 0.9, 0.5) both; }
+@keyframes fx-blind { 0% { opacity: 0; } 70% { opacity: 0.9; } 100% { opacity: 1; } }
+.fx.is-blind .fx__photo:not(.fx__photo--a):not(.fx__photo--b) { animation: fx-over 1100ms ease-in both; }
+@keyframes fx-over {
+  from { opacity: 1; clip-path: inset(0 0 0 0); filter: brightness(1.05) saturate(0.75); }
+  to   { opacity: 1; clip-path: inset(0 0 0 0); filter: brightness(9) blur(8px); }
+}
+
+/* спокойный режим: без вспышек-инверсий, глитча и ослепления (JS это пропускает) */
+html.calm .fx.is-invert { filter: none; }
+html.calm .fx__vig.is-beat,
+html.calm .fx__fig.is-glory .fx__photo--a,
+html.calm .fx__fig.is-glory .fx__photo--b,
+html.calm .fx__rays { animation: none; }

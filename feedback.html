@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Обратная связь — Судебная экспертиза</title>
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/feedback.css">
+  <script src="js/common.js"></script>
+</head>
+<body class="page-feedback">
+
+  <main class="feedback-container">
+    <h1 class="feedback__title">Апелляция вердикта</h1>
+    <p class="feedback__subtitle">Система не ошибается. Но если ты не согласен с реальностью, выбери свой путь искупления:</p>
+
+    <div class="feedback__actions">
+      <!-- Кнопка 1: Перенаправление к психологам -->
+      <button class="btn" id="btnPsychologists">Неправильно определили</button>
+
+      <!-- Кнопка 2: Сброс данных и возврат к регистрации -->
+      <button class="btn" id="btnResetData">Неправильно ввёл данные</button>
+
+      <!-- Кнопка 3: Вызов психологической поддержки («поплачь») -->
+      <button class="btn" id="btnSupport">Психологическая поддержка</button>
+    </div>
+
+    <!-- Скрытый блок психологической поддержки, который появится при клике -->
+    <div class="support-modal" id="supportModal" hidden>
+      <h2 class="support__mega glitch" data-text="ПОПЛАЧЬ">ПОПЛАЧЬ</h2>
+      <div class="support__img-wrap">
+        <img src="img/velya.jpg" alt="Поплачь" class="support__img">
+      </div>
+      <button class="btn support__close" id="btnCloseSupport">Принять и продолжить страдать</button>
+    </div>
+
+    <div style="margin-top: 3rem;">
+      <a href="choose.html" class="btn">← Вернуться в переулок</a>
+    </div>
+    <div class="custom-alert" id="customAlert" hidden>
+      <div class="custom-alert__content">
+        <p id="alertText"></p>
+        <button class="btn" id="alertClose">Понятно</button>
+      </div>
+    </div>
+  </main>
+  <script src="js/feedback.js"></script>
+</body>
+</html>

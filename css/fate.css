@@ -1,0 +1,71 @@
+/* ==========================================================
+   fate.css — «судьба»: стили для fate.js (подключается на всех
+   страницах, кроме регистрации, после base.css).
+   ========================================================== */
+
+/* постоянная подпись: кто ты по версии сайта */
+.fate-tag {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  z-index: var(--z-corner);
+  margin: var(--gutter);
+  font-size: var(--fs-xs);
+  letter-spacing: 0.04em;
+  color: var(--smoke);
+  pointer-events: none;
+}
+
+/* принижающие надписи: вспыхивают в случайном месте и гаснут.
+   difference инвертирует цвет поверх светлых участков, текст читается везде */
+.fate-say {
+  position: fixed;
+  z-index: calc(var(--z-corner) + 2);
+  max-width: 16em;
+  font-family: var(--font-display);
+  font-size: clamp(1.1rem, 2.6vw, 2.2rem);
+  line-height: 1;
+  color: #fff;
+  mix-blend-mode: difference;
+  transform: rotate(var(--rot, 0deg));
+  pointer-events: none;
+  animation: fate-say 2800ms steps(1, end) both;
+}
+@keyframes fate-say {
+  0%   { opacity: 0; }
+  4%   { opacity: 1; }
+  8%   { opacity: 0; }
+  12%  { opacity: 1; }
+  85%  { opacity: 1; }
+  90%  { opacity: 0; }
+  94%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* разрыв картинки: белые полосы с инверсией того, что под ними */
+.fate-tear {
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--z-corner) + 2);
+  overflow: hidden;
+  pointer-events: none;
+}
+.fate-tear i {
+  position: absolute;
+  left: 0;
+  right: 0;
+  background: #fff;
+  mix-blend-mode: difference;
+  animation: fate-bar 240ms steps(2, end) both;
+}
+@keyframes fate-bar {
+  0%   { opacity: 1; }
+  50%  { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+/* третья стадия: зерно становится грубее */
+html.fate-3 body::after { opacity: 0.17; }
+
+/* спокойный режим: надписи остаются, без мигания; полосы JS не создаёт */
+html.calm .fate-say { animation: none; opacity: 1; }
